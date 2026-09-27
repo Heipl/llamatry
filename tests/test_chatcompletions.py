@@ -21,7 +21,8 @@ OpenAIInstrumentor().instrument()
 
 @pytest.mark.asyncio
 async def test_chat_acreate():
-    response = await openai.ChatCompletion.acreate(
+    client = openai.AsyncOpenAI()
+    response = await client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -35,12 +36,13 @@ async def test_chat_acreate():
         stream=False,
     )
     assert response is not None
-    assert response["choices"][0]["message"]["content"] is not None
+    assert response.choices[0].message.content is not None
 
 
 @pytest.mark.asyncio
 async def test_chat_acreate_stream():
-    response = await openai.ChatCompletion.acreate(
+    client = openai.AsyncOpenAI()
+    response = await client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -55,13 +57,15 @@ async def test_chat_acreate_stream():
     )
     assert response is not None
     async for obj in response:
-        delta = obj["choices"][0]["delta"]
-        if "content" in delta:
-            assert delta["content"] is not None
+        if not obj.choices:
+            continue
+        delta = obj.choices[0].delta
+        if delta.content is not None:
+            assert delta.content is not None
 
 
 def test_chat_create_stream():
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -76,13 +80,15 @@ def test_chat_create_stream():
     )
     assert response is not None
     for obj in response:
-        delta = obj["choices"][0]["delta"]
-        if "content" in delta:
-            assert delta["content"] is not None
+        if not obj.choices:
+            continue
+        delta = obj.choices[0].delta
+        if delta.content is not None:
+            assert delta.content is not None
 
 
 def test_chat_create():
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -95,4 +101,4 @@ def test_chat_create():
         temperature=0.5,
     )
     assert response is not None
-    assert response["choices"][0]["message"]["content"] is not None
+    assert response.choices[0].message.content is not None

@@ -20,7 +20,7 @@ OpenAIInstrumentor().instrument()
 
 
 def test_embed_create():
-    response = openai.Embedding.create(
+    response = openai.embeddings.create(
         input="Your text string goes here", model="text-embedding-ada-002"
     )
     assert response is not None
@@ -28,7 +28,8 @@ def test_embed_create():
 
 @pytest.mark.asyncio
 async def test_embed_acreate():
-    response = await openai.Embedding.acreate(
+    client = openai.AsyncOpenAI()
+    response = await client.embeddings.create(
         input="Your text string goes here", model="text-embedding-ada-002"
     )
     assert response is not None

@@ -23,7 +23,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 @app.route("/")
 def hello():
     prompt = "What is the meaning of life in a short sentence?"
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -37,8 +37,8 @@ def hello():
     # a database or other storage for search or review later
     span = trace.get_current_span()
     span.set_attribute("openai.prompt", prompt)
-    span.set_attribute("openai.response", response["choices"][0]["message"]["content"])
-    return {"content": response["choices"][0]["message"]["content"]}
+    span.set_attribute("openai.response", response.choices[0].message.content)
+    return {"content": response.choices[0].message.content}
 
 OpenAICompletionInstrumentor().instrument()
 

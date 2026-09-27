@@ -21,8 +21,9 @@ OpenAIInstrumentor().instrument()
 
 @pytest.mark.asyncio
 async def test_completion_acreate():
-    response = await openai.Completion.acreate(
-        engine="text-ada-001",
+    client = openai.AsyncOpenAI()
+    response = await client.completions.create(
+        model="text-ada-001",
         prompt="Respond with 'Hello!'",
         max_tokens=5,
         temperature=0.5,
@@ -30,13 +31,14 @@ async def test_completion_acreate():
         stream=False,
     )
     assert response is not None
-    assert response["choices"][0]["text"] is not None
+    assert response.choices[0].text is not None
 
 
 @pytest.mark.asyncio
 async def test_completion_acreate_stream():
-    response = await openai.Completion.acreate(
-        engine="text-ada-001",
+    client = openai.AsyncOpenAI()
+    response = await client.completions.create(
+        model="text-ada-001",
         prompt="Respond with 'Hello!'",
         max_tokens=5,
         temperature=0.5,
@@ -45,12 +47,12 @@ async def test_completion_acreate_stream():
     )
     assert response is not None
     async for resp in response:
-        assert resp["choices"][0]["text"] is not None
+        assert resp.choices[0].text is not None
 
 
 def test_completion_create():
-    response = openai.Completion.create(
-        engine="text-ada-001",
+    response = openai.completions.create(
+        model="text-ada-001",
         prompt="Respond with 'Hello!'",
         max_tokens=5,
         temperature=0.5,
@@ -58,12 +60,12 @@ def test_completion_create():
         stream=False,
     )
     assert response is not None
-    assert response["choices"][0]["text"] is not None
+    assert response.choices[0].text is not None
 
 
 def test_completion_create_stream():
-    response = openai.Completion.create(
-        engine="text-ada-001",
+    response = openai.completions.create(
+        model="text-ada-001",
         prompt="Respond with 'Hello!'",
         max_tokens=5,
         temperature=0.5,
@@ -72,4 +74,4 @@ def test_completion_create_stream():
     )
     assert response is not None
     for resp in response:
-        assert resp["choices"][0]["text"] is not None
+        assert resp.choices[0].text is not None

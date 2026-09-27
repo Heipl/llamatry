@@ -36,7 +36,7 @@ RequestsInstrumentor().instrument()
 # Use the OpenAI API
 @tracer.wrap("entry_point")
 def call(prompt):
-    openai.ChatCompletion.create(
+    openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
