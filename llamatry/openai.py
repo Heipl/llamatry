@@ -2,7 +2,18 @@ import functools
 from typing import Collection
 from opentelemetry import trace
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-import openai
+from openai.resources.chat.completions.completions import (
+    Completions as _ChatCompletions,
+    AsyncCompletions as _AsyncChatCompletions,
+)
+from openai.resources.completions import (
+    Completions as _Completions,
+    AsyncCompletions as _AsyncCompletions,
+)
+from openai.resources.embeddings import (
+    Embeddings as _Embeddings,
+    AsyncEmbeddings as _AsyncEmbeddings,
+)
 import json
 
 tracer = trace.get_tracer("llamatry")
@@ -10,33 +21,33 @@ tracer = trace.get_tracer("llamatry")
 
 class OpenAIInstrumentor(BaseInstrumentor):
     def _instrument(self, **kwargs):
-        self._original_chatcompletion_create = openai.ChatCompletion.create
-        self._original_chatcompletion_acreate = openai.ChatCompletion.acreate
-        self._original_create = openai.Completion.create
-        self._original_acreate = openai.Completion.acreate
-        self._original_embeddings_create = openai.Embedding.create
-        self._original_embeddings_acreate = openai.Embedding.acreate
+        self._original_chatcompletion_create = _ChatCompletions.create
+        self._original_chatcompletion_acreate = _AsyncChatCompletions.create
+        self._original_create = _Completions.create
+        self._original_acreate = _AsyncCompletions.create
+        self._original_embeddings_create = _Embeddings.create
+        self._original_embeddings_acreate = _AsyncEmbeddings.create
 
-        openai.ChatCompletion.create = self._trace_create(
+        _ChatCompletions.create = self._trace_create(
             self._original_chatcompletion_create
         )
-        openai.ChatCompletion.acreate = self._trace_acreate(
+        _AsyncChatCompletions.create = self._trace_acreate(
             self._original_chatcompletion_acreate
         )
-        openai.Completion.create = self._trace_create(self._original_create)
-        openai.Completion.acreate = self._trace_acreate(self._original_acreate)
-        openai.Embedding.create = self._trace_create(self._original_embeddings_create)
-        openai.Embedding.acreate = self._trace_acreate(
+        _Completions.create = self._trace_create(self._original_create)
+        _AsyncCompletions.create = self._trace_acreate(self._original_acreate)
+        _Embeddings.create = self._trace_create(self._original_embeddings_create)
+        _AsyncEmbeddings.create = self._trace_acreate(
             self._original_embeddings_acreate
         )
 
     def _uninstrument(self, **kwargs):
-        openai.ChatCompletion.create = self._original_chatcompletion_create
-        openai.ChatCompletion.acreate = self._original_chatcompletion_acreate
-        openai.Completion.create = self._original_completion_create
-        openai.Completion.acreate = self._original_completion_acreate
-        openai.Embedding.create = self._original_embeddings_create
-        openai.Embedding.acreate = self._original_embeddings_acreate
+        _ChatCompletions.create = self._original_chatcompletion_create
+        _AsyncChatCompletions.create = self._original_chatcompletion_acreate
+        _Completions.create = self._original_completion_create
+        _AsyncCompletions.create = self._original_completion_acreate
+        _Embeddings.create = self._original_embeddings_create
+        _AsyncEmbeddings.create = self._original_embeddings_acreate
 
     def instrumentation_dependencies(self) -> Collection[BaseInstrumentor]:
         return []
@@ -58,16 +69,17 @@ class OpenAIInstrumentor(BaseInstrumentor):
                 span.set_attribute(f"openai.create.{key}", json.dumps(value))
 
         for key in ["id", "created", "model"]:
-            if key in response:
-                span.set_attribute(f"openai.response.{key}", response[key])
+            value = getattr(response, key, None)
+            if value is not None:
+                span.set_attribute(f"openai.response.{key}", value)
 
-        usage = response.get("usage", None)
-        model = response.get("model", "__unknown__")
+        usage = getattr(response, "usage", None)
         if usage:
             for key in ["completion_tokens", "prompt_tokens", "total_tokens"]:
-                if key in usage:
-                    span.set_attribute(f"openai.usage.{key}", usage[key])
-        span.set_attribute("openai.response", json.dumps(response))
+                value = getattr(usage, key, None)
+                if value is not None:
+                    span.set_attribute(f"openai.usage.{key}", value)
+        span.set_attribute("openai.response", response.model_dump_json())
 
     def _trace_create(self, original_create):
         @functools.wraps(original_create)

@@ -62,7 +62,7 @@ OpenAIInstrumentor().instrument()
 Make API calls to the OpenAI API:
 
 ```python
-response = openai.ChatCompletion.create(
+response = openai.chat.completions.create(
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Who won the world series in 2020?"},
